@@ -82,6 +82,7 @@ export const DmTarget = new Juke.Target({
   inputs: [
     "_maps/map_files/**",
     "code/**",
+    "modular_thabes/**", //THABES EDIT: self explanatory
     "html/**",
     "icons/**",
     "interface/**",

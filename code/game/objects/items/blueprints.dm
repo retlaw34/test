@@ -229,6 +229,14 @@
 		M.name = replacetext(M.name,oldtitle,title)
 	for(var/obj/machinery/fax/M in A)
 		M.fax_name = replacetext(M.fax_name,oldtitle,title)
+
+//THABES ADDITION BEGIN: PHONE SHIT
+	for(var/obj/structure/telephone_transmitter/M in A)
+		if(!M.auto_name)
+			continue
+		M.phone_id = replacetext(M.phone_id,oldtitle,title)
+//THABES ADDITION END: PHONE SHIT
+
 	//TODO: much much more. Unnamed airlocks, cameras, etc.
 
 /obj/item/areaeditor/shuttle

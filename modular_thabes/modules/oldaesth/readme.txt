@@ -1,0 +1,1 @@
+this is extremely outdated, it was actually superseeced by stuff added to the game since. keeping it here in case anyone needs the sprites

@@ -178,7 +178,7 @@ GLOBAL_LIST_INIT(department_radio_keys, list(
 			src.log_talk(message, LOG_SAY, forced_by=forced, custom_say_emote = message_mods[MODE_CUSTOM_SAY_EMOTE])
 
 	message = treat_message(message) // unfortunately we still need this
-	var/sigreturn = SEND_SIGNAL(src, COMSIG_MOB_SAY, args)
+	var/sigreturn = SEND_SIGNAL(src, COMSIG_MOB_SAY, args, src) //THABES EDIT, ORIGINAL: var/sigreturn = SEND_SIGNAL(src, COMSIG_MOB_SAY, args)
 	if (sigreturn & COMPONENT_UPPERCASE_SPEECH)
 		message = uppertext(message)
 	if(!message)
