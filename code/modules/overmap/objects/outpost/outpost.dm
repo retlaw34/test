@@ -3,6 +3,9 @@
 	char_rep = "T"
 	token_icon_state = "station_0"
 
+	interaction_options = list(INTERACTION_OVERMAP_DOCK, INTERACTION_OVERMAP_QUICKDOCK)
+
+
 	// The map template used for the outpost. If null, there will be no central area loaded.
 	// Set to an instance of the singleton for its type in New.
 	var/datum/map_template/outpost/main_template = null
@@ -41,6 +44,12 @@
 	var/max_missions = 15
 	/// List of missions that can be accepted at this outpost. Missions which have been accepted are removed from this list.
 	var/list/datum/mission/missions
+	/// List of all of the things this outpost offers
+	var/list/supply_packs = list()
+	/// our 'Order number'
+	var/ordernum = 1
+	/// Our faction of the outpost
+	var/faction
 
 /datum/overmap/outpost/Initialize(position, ...)
 	. = ..()
@@ -64,6 +73,7 @@
 	Rename(gen_outpost_name())
 
 	fill_missions()
+	populate_cargo()
 	addtimer(CALLBACK(src, PROC_REF(fill_missions)), 10 MINUTES, TIMER_STOPPABLE|TIMER_LOOP|TIMER_DELETE_ME)
 
 /datum/overmap/outpost/Destroy(...)
@@ -90,6 +100,7 @@
 	. = ..()
 	if(!.)
 		return
+	alter_token_appearance()
 	var/list/hangar_vlevels = mapzone.virtual_levels.Copy()
 	mapzone.name = name
 
@@ -138,6 +149,15 @@
 		var/mission_type = get_weighted_mission_type()
 		var/datum/mission/M = new mission_type(src)
 		LAZYADD(missions, M)
+
+/datum/overmap/outpost/proc/populate_cargo()
+	ordernum = rand(1, 99000)
+
+	for(var/datum/supply_pack/current_pack as anything in subtypesof(/datum/supply_pack))
+		current_pack = new current_pack()
+		if(!current_pack.contains)
+			continue
+		supply_packs += current_pack
 
 /datum/overmap/outpost/proc/load_main_level()
 	if(!main_template)
@@ -196,9 +216,16 @@
 		// give the elevator a first floor
 		plat.master_datum.add_floor_landmarks(anchor_landmark, shaft_li - anchor_landmark)
 
-/datum/overmap/outpost/pre_docked(datum/overmap/ship/controlled/dock_requester)
+/datum/overmap/outpost/pre_docked(datum/overmap/ship/controlled/dock_requester, override_dock)
 	var/obj/docking_port/stationary/h_dock
 	var/datum/map_template/outpost/h_template = get_hangar_template(dock_requester.shuttle_port)
+
+	if(src in dock_requester.blacklisted)
+		return new /datum/docking_ticket(_docking_error = "Docking request denied: [dock_requester.blacklisted[src]]")
+
+	if(override_dock)
+		return new /datum/docking_ticket(override_dock, src, dock_requester)
+
 	if(!h_template || !length(shaft_datums))
 		return FALSE
 
@@ -211,11 +238,15 @@
 		)
 		return FALSE
 
-	if(src in dock_requester.blacklisted)
-		return new /datum/docking_ticket(_docking_error = "Docking request denied: [dock_requester.blacklisted[src]]")
-
-	adjust_dock_to_shuttle(h_dock, dock_requester.shuttle_port)
 	return new /datum/docking_ticket(h_dock, src, dock_requester)
+
+/datum/overmap/outpost/get_dockable_locations(datum/overmap/requesting_interactor)
+	var/list/docks = list()
+	for(var/datum/hangar_shaft/h_shaft as anything in shaft_datums)
+		for(var/obj/docking_port/stationary/h_dock as anything in h_shaft.hangar_docks)
+			if(!h_dock.docked && !h_dock.current_docking_ticket)
+				LAZYADD(docks, h_dock)
+	return docks
 
 /datum/overmap/outpost/post_docked(datum/overmap/ship/controlled/dock_requester)
 	for(var/mob/M as anything in GLOB.player_list)
@@ -327,6 +358,7 @@
 		CRASH("[src] ([src.type]) could not find a hangar docking port landmark for its spawned hangar [h_template]!")
 
 	var/obj/docking_port/stationary/h_dock = new(dock_turf)
+	h_dock.adjust_dock_for_landing = TRUE
 	h_dock.dir = NORTH
 	h_dock.width = h_template.dock_width
 	h_dock.height = h_template.dock_height
@@ -365,6 +397,11 @@
 
 		shaft.shaft_elevator.add_floor_landmarks(anchor_mark, mach_marks)
 	return h_dock
+
+/datum/overmap/outpost/alter_token_appearance()
+	. = ..()
+	token.icon_state = token_icon_state
+	token.color = current_overmap.secondary_structure_color
 
 /*
 	Hangar shafts

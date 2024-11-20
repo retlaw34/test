@@ -1,4 +1,5 @@
-#define BULLET_SHELL_DAMAGE 1
+#define LEGIONVIRUS_TYPE /datum/disease/transformation/legionvirus
+#define MAX_BULLET_SHELL_DAMAGE 2
 
 //A beast that fire freezing blasts.
 /mob/living/simple_animal/hostile/asteroid/basilisk
@@ -32,7 +33,6 @@
 	attack_sound = 'sound/weapons/bladeslice.ogg'
 	aggro_vision_range = 9
 	turns_per_move = 5
-	gold_core_spawnable = HOSTILE_SPAWN
 	loot = list(/obj/item/stack/ore/diamond{layer = ABOVE_MOB_LAYER},
 				/obj/item/stack/ore/diamond{layer = ABOVE_MOB_LAYER})
 	var/lava_drinker = TRUE
@@ -118,7 +118,7 @@
 	lava_drinker = FALSE
 	maxHealth = 40
 	health = 40
-	var/shell_health = 80 //Tough to crack, easy to kill.
+	var/shell_health = 60 //Tough to crack, easy to kill.
 	var/has_shell = TRUE
 	var/list/shell_loot = list(/obj/item/stack/ore/diamond, /obj/item/stack/ore/diamond)
 	var/shell_snap_message = FALSE
@@ -155,11 +155,11 @@
 	if(I.force)
 		if(shell_damage(I.force))			// Damage was absorbed by the shell, no need to go further
 			send_item_attack_message(I, user)
-			return TRUE
+			visible_message("<span class='notice'>[src]'s shell absorbs the damage, dealing minimal the [src] itself!</span>")
 	return ..()
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/whitesands/bullet_act(obj/projectile/P)
-	shell_damage(BULLET_SHELL_DAMAGE)
+	shell_damage(max(P.force, MAX_BULLET_SHELL_DAMAGE))
 	if(has_shell)
 		playsound(src, pick('sound/weapons/bulletflyby.ogg', 'sound/weapons/bulletflyby2.ogg', 'sound/weapons/bulletflyby3.ogg'), 85, TRUE)
 		visible_message("<span class='notice'>The [P] is absorbed by the [src]'s shell, dealing minimal damage!</span>") //make it less confusing when bullets do no damage
@@ -167,7 +167,7 @@
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/whitesands/hitby(atom/movable/AM, skipcatch, hitpush, blocked, datum/thrownthing/throwingdatum)
 	if(istype(AM, /obj/item))
-		shell_damage(BULLET_SHELL_DAMAGE)
+		shell_damage(MAX_BULLET_SHELL_DAMAGE)
 	..()
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/whitesands/drop_loot()
@@ -202,7 +202,8 @@
 	name = "glowing basilisk"
 	projectiletype = /obj/projectile/temp/basilisk/heated
 
-#undef BULLET_SHELL_DAMAGE
+#undef MAX_BULLET_SHELL_DAMAGE
+#undef LEGIONVIRUS_TYPE
 
 //Watcher
 /mob/living/simple_animal/hostile/asteroid/basilisk/watcher
@@ -229,7 +230,6 @@
 	robust_searching = 1
 	attack_same = TRUE		// So we'll fight basilisks
 	//mob_trophy = /obj/item/mob_trophy/watcher_wing
-	gold_core_spawnable = NO_SPAWN
 	loot = list()
 	butcher_results = list(/obj/item/stack/ore/diamond = 2, /obj/item/stack/sheet/sinew = 2, /obj/item/stack/sheet/bone = 1)
 	lava_drinker = FALSE

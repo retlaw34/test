@@ -21,11 +21,11 @@ GLOBAL_LIST_EMPTY(ore_veins)
 	//The design process is that class 1 veins have a small chance of generating with class 2 ores and so on
 	//As higher class veins will be increasingly harder to mine
 	var/list/ore_list = list(
-		/obj/item/stack/ore/iron = 7,
+		/obj/item/stack/ore/hematite = 7,
 		/obj/item/stack/ore/plasma = 3,
-		/obj/item/stack/ore/silver = 2,
-		/obj/item/stack/ore/uranium = 1,
-		/obj/item/stack/ore/titanium = 2,
+		/obj/item/stack/ore/galena = 2,
+		/obj/item/stack/ore/autunite = 1,
+		/obj/item/stack/ore/rutile = 2,
 		)
 	//The post initialize list of all possible drops from the vein
 	//Meant to be player facing in the form of mining scanners
@@ -64,15 +64,15 @@ GLOBAL_LIST_EMPTY(ore_veins)
 	if(!LAZYLEN(vein_contents))
 		switch(vein_class)
 			if(1)
-				ore_type_amount = rand(1,3)
+				ore_type_amount = rand(2,6)
 			if(2)
-				ore_type_amount = rand(3,5)
+				ore_type_amount = rand(6,10)
 			if(3)
-				ore_type_amount = rand(4,6)
+				ore_type_amount = rand(8,14)
 			else
 				ore_type_amount = 1
 		for(var/ore_count in 1 to ore_type_amount)
-			var/picked = pickweight(ore_list)
+			var/picked = pick_weight(ore_list)
 			vein_contents.Add(picked)
 			ore_list.Remove(picked)
 	GLOB.ore_veins += src
@@ -122,11 +122,11 @@ GLOBAL_LIST_EMPTY(ore_veins)
 	mining_charges = 8
 	vein_class = 2
 	ore_list = list(
-		/obj/item/stack/ore/iron = 8,
+		/obj/item/stack/ore/hematite = 8,
 		/obj/item/stack/ore/plasma = 3,
-		/obj/item/stack/ore/silver = 4,
-		/obj/item/stack/ore/uranium = 2,
-		/obj/item/stack/ore/titanium = 5,
+		/obj/item/stack/ore/galena = 4,
+		/obj/item/stack/ore/autunite = 2,
+		/obj/item/stack/ore/rutile = 5,
 		/obj/item/stack/ore/diamond = 1,
 		/obj/item/stack/ore/gold = 2,
 		/obj/item/stack/ore/bluespace_crystal = 1,
@@ -145,11 +145,11 @@ GLOBAL_LIST_EMPTY(ore_veins)
 	mining_charges = 10
 	vein_class = 3
 	ore_list = list(
-		/obj/item/stack/ore/iron = 9,
+		/obj/item/stack/ore/hematite = 9,
 		/obj/item/stack/ore/plasma = 3,
-		/obj/item/stack/ore/silver = 5,
-		/obj/item/stack/ore/uranium = 2,
-		/obj/item/stack/ore/titanium = 6,
+		/obj/item/stack/ore/galena = 5,
+		/obj/item/stack/ore/autunite = 2,
+		/obj/item/stack/ore/rutile = 6,
 		/obj/item/stack/ore/diamond = 4,
 		/obj/item/stack/ore/gold = 5,
 		/obj/item/stack/ore/bluespace_crystal = 3,
@@ -168,20 +168,20 @@ GLOBAL_LIST_EMPTY(ore_veins)
 	mob_types = list(
 		/mob/living/simple_animal/hostile/asteroid/wolf = 30,
 		/mob/living/simple_animal/hostile/asteroid/polarbear = 30,
-		/mob/living/simple_animal/hostile/asteroid/hivelord/legion/snow/nest = 20,
-		/mob/living/simple_animal/hostile/asteroid/ice_demon = 10,
-		/mob/living/simple_animal/hostile/asteroid/ice_whelp = 5,
+		/mob/living/simple_animal/hostile/asteroid/hivelord/legion/snow/nest = 25,
+		/mob/living/simple_animal/hostile/asteroid/ice_demon = 5,
+		/mob/living/simple_animal/hostile/asteroid/ice_whelp = 1,
 		/mob/living/simple_animal/hostile/asteroid/lobstrosity = 20,
 	)
 	//Ice planets earn a slightly higher rare ore chance on account of them being notably harder
 	//Alongside being a much more reliable source of plasma
 	ore_list = list(
-		/obj/item/stack/ore/iron = 7,
+		/obj/item/stack/ore/hematite = 7,
 		/obj/item/stack/ore/plasma = 7,
-		/obj/item/stack/ore/silver = 3,
-		/obj/item/stack/ore/uranium = 1,
-		/obj/item/stack/ore/titanium = 2,
-		/obj/item/stack/ore/titanium = 2,
+		/obj/item/stack/ore/galena = 3,
+		/obj/item/stack/ore/autunite = 1,
+		/obj/item/stack/ore/rutile = 2,
+		/obj/item/stack/ore/rutile = 2,
 		/obj/item/stack/ore/gold = 1,
 		/obj/item/stack/ore/diamond = 1,
 		/obj/item/stack/ore/ice = 7,
@@ -191,11 +191,11 @@ GLOBAL_LIST_EMPTY(ore_veins)
 	mining_charges = 8
 	vein_class = 2
 	ore_list = list(
-		/obj/item/stack/ore/iron = 8,
+		/obj/item/stack/ore/hematite = 8,
 		/obj/item/stack/ore/plasma = 9,
-		/obj/item/stack/ore/silver = 5,
-		/obj/item/stack/ore/uranium = 2,
-		/obj/item/stack/ore/titanium = 6,
+		/obj/item/stack/ore/galena = 5,
+		/obj/item/stack/ore/autunite = 2,
+		/obj/item/stack/ore/rutile = 6,
 		/obj/item/stack/ore/diamond = 2,
 		/obj/item/stack/ore/gold = 3,
 		/obj/item/stack/ore/bluespace_crystal = 1,
@@ -208,11 +208,11 @@ GLOBAL_LIST_EMPTY(ore_veins)
 	mining_charges = 10
 	vein_class = 3
 	ore_list = list(
-		/obj/item/stack/ore/iron = 8,
+		/obj/item/stack/ore/hematite = 8,
 		/obj/item/stack/ore/plasma = 9,
-		/obj/item/stack/ore/silver = 6,
-		/obj/item/stack/ore/uranium = 2,
-		/obj/item/stack/ore/titanium = 6,
+		/obj/item/stack/ore/galena = 6,
+		/obj/item/stack/ore/autunite = 2,
+		/obj/item/stack/ore/rutile = 6,
 		/obj/item/stack/ore/diamond = 4,
 		/obj/item/stack/ore/gold = 6,
 		/obj/item/stack/ore/bluespace_crystal = 4,
@@ -251,5 +251,34 @@ GLOBAL_LIST_EMPTY(ore_veins)
 		/mob/living/simple_animal/hostile/asteroid/brimdemon = 20,
 		/mob/living/simple_animal/hostile/carp/megacarp = 20,
 		/mob/living/simple_animal/hostile/asteroid/goliath/beast/ancient = 10
+		)
+
+
+// rockplanet
+
+/obj/structure/vein/rockplanet
+	mob_types = list(
+		/mob/living/simple_animal/hostile/asteroid/goliath/beast/rockplanet = 20,
+		/mob/living/simple_animal/hostile/asteroid/elite/broodmother_child/rockplanet = 30,
+		/mob/living/simple_animal/hostile/netherworld/migo/asteroid = 10,
+		/mob/living/simple_animal/hostile/netherworld/asteroid = 10,
+
+		)
+
+/obj/structure/vein/classtwo/rockplanet
+	mob_types = list(
+		/mob/living/simple_animal/hostile/asteroid/goliath/beast/rockplanet = 50,
+		/mob/living/simple_animal/hostile/asteroid/elite/broodmother_child/rockplanet = 30,
+		/mob/living/simple_animal/hostile/netherworld/migo/asteroid = 5,
+		/mob/living/simple_animal/hostile/netherworld/asteroid = 5,
+		)
+
+/obj/structure/vein/classthree/rockplanet
+	mob_types = list(
+		/mob/living/simple_animal/hostile/asteroid/goliath/beast/rockplanet = 50,
+		/mob/living/simple_animal/hostile/asteroid/elite/broodmother_child/rockplanet = 40,
+		/mob/living/simple_animal/hostile/netherworld/migo/asteroid = 5,
+		/mob/living/simple_animal/hostile/netherworld/asteroid = 5,
+		/mob/living/simple_animal/hostile/asteroid/fugu/asteroid = 5,
 		)
 

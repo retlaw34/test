@@ -205,6 +205,7 @@
 	var/locked = TRUE
 	var/shield_range = 8
 	var/shocked = FALSE
+	var/crashing = FALSE
 	var/obj/structure/cable/attached // the attached cable
 
 /obj/machinery/power/shieldwallgen/xenobiologyaccess		//use in xenobiology containment
@@ -252,15 +253,24 @@
 		if(!active_power_usage || surplus() >= active_power_usage)
 			add_load(active_power_usage)
 		else
-			visible_message(span_danger("The [src.name] shuts down due to lack of power!"), "If this message is ever seen, something is wrong.",span_hear("You hear heavy droning fade out.</"))
-			active = FALSE
-			log_game("[src] deactivated due to lack of power at [AREACOORD(src)]")
-			for(var/direction in GLOB.cardinals)
-				cleanup_field(direction)
+			if(!crashing)
+				balloon_alert_to_viewers("[src] blares an alarm!")
+				playsound(src, 'sound/machines/cryo_warning.ogg', 100)
+				crashing = TRUE
+				addtimer(CALLBACK(src, PROC_REF(kill_shield)), 6 SECONDS)
+
 	else
 		for(var/direction in GLOB.cardinals)
 			cleanup_field(direction)
 	update_appearance()
+
+/obj/machinery/power/shieldwallgen/proc/kill_shield()
+	visible_message(span_danger("The [src.name] shuts down due to lack of power!"), "If this message is ever seen, something is wrong.",span_hear("You hear heavy droning fade out."))
+	log_game("[src] deactivated due to lack of power at [AREACOORD(src)]")
+	active = FALSE
+	crashing = FALSE
+	for(var/direction in GLOB.cardinals)
+		cleanup_field(direction)
 
 /obj/machinery/power/shieldwallgen/update_icon_state()
 	if(active)
@@ -411,14 +421,14 @@
 		visible_message(span_notice("The [src.name] hums as it powers down."), \
 			"If this message is ever seen, something is wrong.", \
 			span_notice("You hear heavy droning fade out."))
-		playsound(src, 'sound/machines/synth_no.ogg', 50, TRUE, frequency = 6120)
+		playsound(src, 'sound/machines/synth_no.ogg', 100, TRUE, frequency = 6120)
 		active = FALSE
 		log_game("[src] was deactivated by wire pulse at [AREACOORD(src)]")
 	else
 		visible_message(span_notice("The [src.name] beeps as it powers up."), \
 			"If this message is ever seen, something is wrong.", \
 			span_notice("You hear heavy droning."))
-		playsound(src, 'sound/machines/synth_yes.ogg', 50, TRUE, frequency = 6120)
+		playsound(src, 'sound/machines/synth_yes.ogg', 100, TRUE, frequency = 6120)
 		active = ACTIVE_SETUPFIELDS
 		log_game("[src] was activated by wire pulse at [AREACOORD(src)]")
 

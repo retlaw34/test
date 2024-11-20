@@ -7,6 +7,9 @@
 /datum/overmap/dynamic
 	name = "weak energy signature"
 	char_rep = "?"
+
+	interaction_options = list(INTERACTION_OVERMAP_DOCK, INTERACTION_OVERMAP_QUICKDOCK)
+
 	///The active turf reservation, if there is one
 	var/datum/map_zone/mapzone
 	///The preset ruin template to load, if/when it is loaded.
@@ -20,7 +23,7 @@
 	///Planet's flavor name, if it is a planet.
 	var/planet_name
 	///List of probabilities for each type of planet.
-	var/static/list/probabilities
+	var/list/probabilities
 	///The planet that will be forced to load
 	var/force_encounter
 	///Ruin types to generate
@@ -74,22 +77,29 @@
 	if(reserve_docks)
 		return get_turf(pick(reserve_docks))
 
-/datum/overmap/dynamic/pre_docked(datum/overmap/ship/controlled/dock_requester)
+/datum/overmap/dynamic/pre_docked(datum/overmap/ship/controlled/dock_requester, override_dock)
 	if(loading)
 		return new /datum/docking_ticket(_docking_error = "[src] is currently being scanned for suitable docking locations by another ship. Please wait.")
 	if(!load_level())
 		return new /datum/docking_ticket(_docking_error = "[src] cannot be docked to.")
 	else
-		var/dock_to_use = null
-		for(var/obj/docking_port/stationary/dock as anything in reserve_docks)
-			if(!dock.docked)
-				dock_to_use = dock
-				break
+		var/dock_to_use = override_dock
+		if(!override_dock)
+			for(var/obj/docking_port/stationary/dock as anything in reserve_docks)
+				if(!dock.docked)
+					dock_to_use = dock
+					break
 
 		if(!dock_to_use)
 			return new /datum/docking_ticket(_docking_error = "[src] does not have any free docks. Aborting docking.")
-		adjust_dock_to_shuttle(dock_to_use, dock_requester.shuttle_port)
 		return new /datum/docking_ticket(dock_to_use, src, dock_requester)
+
+/datum/overmap/dynamic/get_dockable_locations(datum/overmap/requesting_interactor)
+	var/list/docks = list()
+	for(var/obj/docking_port/stationary/dock as anything in reserve_docks)
+		if(!dock.docked && !dock.current_docking_ticket)
+			LAZYADD(docks, dock)
+	return docks
 
 /datum/overmap/dynamic/post_docked(datum/overmap/ship/controlled/dock_requester)
 	if(planet_name)
@@ -107,7 +117,7 @@
 		return //Dont fuck over stranded people
 
 	log_shuttle("[src] [REF(src)] UNLOAD")
-	var/list/results = SSovermap.get_unused_overmap_square()
+	var/list/results = current_overmap.get_unused_overmap_square() //curious on why theyre "reset" instead of deleted; ask mark
 	overmap_move(results["x"], results["y"])
 
 	for(var/obj/docking_port/stationary/dock as anything in reserve_docks)
@@ -124,12 +134,12 @@
  * Chooses a type of level for the dynamic level to use.
  */
 /datum/overmap/dynamic/proc/choose_level_type(load_now = TRUE) //TODO: This is a awful way of hanlding random planets. If maybe it picked from a list of datums that then would be applied on the dynamic datum, it would be a LOT better.
-	if(!probabilities)
-		probabilities = list()
-		for(var/datum/planet_type/planet_type as anything in subtypesof(/datum/planet_type))
-			probabilities[initial(planet_type.planet)] = initial(planet_type.weight)
-	planet = SSmapping.planet_types[force_encounter ? force_encounter : pickweightAllowZero(probabilities)]
-
+	if(isnull(probabilities))
+		probabilities = current_overmap.dynamic_probabilities
+	if(!isnull(force_encounter))
+		planet = force_encounter
+	else
+		planet = SSmapping.planet_types[force_encounter ? force_encounter : pick_weight_allow_zero(probabilities)]
 
 	if(planet.planet !=DYNAMIC_WORLD_ASTEROID && planet.planet != DYNAMIC_WORLD_SPACERUIN) //these aren't real planets
 		planet_name = "[gen_planet_name()]"
@@ -139,9 +149,7 @@
 		Rename(planet.name)
 		token.name = "[planet.name]"
 
-	token.icon_state = planet.icon_state
-	token.desc = planet.desc
-	token.color = planet.color
+	alter_token_appearance()
 	ruin_type = planet.ruin_type
 	default_baseturf = planet.default_baseturf
 	gravity = planet.gravity
@@ -162,8 +170,29 @@
 // #endif
 
 	if(!preserve_level)
-		token.desc += " It may not still be here if you leave it."
+		token.desc += span_notice("\nIt may not still be here if you leave it.")
 		token.update_appearance()
+
+/datum/overmap/dynamic/alter_token_appearance()
+	if(!planet)
+		return ..()
+	token_icon_state = planet.icon_state
+	desc = planet.desc
+	default_color = planet.color
+	var/orestext
+	if(planet.primary_ores)
+		orestext += span_boldnotice("\nInitial scans show a high concentration of the following ores:\n")
+		for(var/obj/ore as anything in planet.primary_ores)
+			var/hex = ORES_TO_COLORS_LIST[ore]
+			orestext += "<font color='[hex]'>	- [ore.name]\n</font>"
+		desc += orestext
+	..()
+	if(current_overmap.override_object_colors)
+		token.color = current_overmap.primary_color
+	current_overmap.post_edit_token_state(src)
+
+///??? I dont think i ever finished this, and if i do, move to planet_types.dm
+/datum/overmap/dynamic/proc/choose_random_asteroid()
 
 /datum/overmap/dynamic/proc/gen_planet_name()
 	. = ""
@@ -192,8 +221,8 @@
 	log_shuttle("[src] [REF(src)] LEVEL_INIT")
 
 	// use the ruin type in template if it exists, or pick from ruin list if IT exists; otherwise null
-	var/selected_ruin = template || (ruin_type ? pickweightAllowZero(SSmapping.ruin_types_probabilities[ruin_type]) : null)
-	var/list/dynamic_encounter_values = SSovermap.spawn_dynamic_encounter(src, selected_ruin)
+	var/selected_ruin = template || (ruin_type ? pick_weight_allow_zero(SSmapping.ruin_types_probabilities[ruin_type]) : null)
+	var/list/dynamic_encounter_values = current_overmap.spawn_dynamic_encounter(src, selected_ruin)
 	if(!length(dynamic_encounter_values))
 		return FALSE
 
@@ -207,9 +236,39 @@
 
 /datum/overmap/dynamic/empty
 	name = "Empty Space"
+	token_icon_state = "signal_ship"
+	interaction_options = list(INTERACTION_OVERMAP_DOCK, INTERACTION_OVERMAP_QUICKDOCK, INTERACTION_OVERMAP_SETSIGNALSPRITE)
+	var/static/list/available_icon_options = list(\
+		"signal_none",
+		"signal_ship",
+		"signal_strange",
+		"signal_info",
+		"signal_distress",
+		"signal_trade",
+		"signal_wreckage",
+		"signal_health",
+		"signal_gun",
+		"signal_sword",
+		"signal_skull",
+		"signal_love",
+		"signal_diner")
+
+/datum/overmap/dynamic/empty/handle_interaction_on_target(mob/living/user, datum/overmap/interactor, choice)
+	switch(choice)
+		if(INTERACTION_OVERMAP_SETSIGNALSPRITE)
+			choice = tgui_input_list(usr, "What appearance should this space take?", "Select Appearance", available_icon_options)
+			if(!choice)
+				return "WARNING: Interaction aborted."
+			token_icon_state = choice
+			alter_token_appearance()
+			return INTERACTION_OVERMAP_SELECTED
+	return ..()
 
 /datum/overmap/dynamic/empty/choose_level_type()
-	return
+	var/datum/overmap/event/current_event = locate(/datum/overmap/event) in get_nearby_overmap_objects()
+	if(!current_event)
+		return
+	current_event.modify_emptyspace_mapgen(src)
 
 /datum/overmap/dynamic/empty/post_undocked(datum/overmap/ship/controlled/dock_requester)
 	if(length(mapzone?.get_mind_mobs()))
@@ -217,6 +276,9 @@
 	log_shuttle("[src] [REF(src)] UNLOAD")
 	qdel(src)
 
+/datum/overmap/dynamic/spaceruin
+	name = "wreckage"
+	force_encounter = RUINTYPE_SPACE
 
 /*
 	OVERMAP ENCOUNTER AREAS
@@ -270,6 +332,11 @@
 	sound_environment = SOUND_ENVIRONMENT_CAVE
 	ambientsounds = SPOOKY
 
+/area/overmap_encounter/planetoid/snowball
+	name = "\improper Snowball Planetoid"
+	sound_environment = SOUND_ENVIRONMENT_STONE_CORRIDOR
+	ambientsounds = TUNDRA
+
 /area/overmap_encounter/planetoid/ice/explored
 	area_flags = VALID_TERRITORY
 
@@ -289,6 +356,15 @@
 /area/overmap_encounter/planetoid/jungle/explored
 	area_flags = VALID_TERRITORY
 
+/area/overmap_encounter/planetoid/battlefield
+	name = "\improper Battlefield Planetoid"
+	sound_environment = SOUND_ENVIRONMENT_CITY
+	ambientsounds = SPOOKY
+
+/area/overmap_encounter/planetoid/battlefield/explored
+	area_flags = VALID_TERRITORY
+
+
 /area/overmap_encounter/planetoid/rockplanet
 	name = "\improper Rocky Planetoid"
 	sound_environment = SOUND_ENVIRONMENT_QUARRY
@@ -301,6 +377,15 @@
 	name = "\improper Beach Planetoid"
 	sound_environment = SOUND_ENVIRONMENT_FOREST
 	ambientsounds = BEACH
+
+/area/overmap_encounter/planetoid/waterplanet
+	name = "\improper Water Planetoid"
+	sound_environment = SOUND_ENVIRONMENT_FOREST
+	ambientsounds = MINING
+
+/area/overmap_encounter/planetoid/rockplanet/explored//for use in ruins
+	area_flags = UNIQUE_AREA
+	area_flags = VALID_TERRITORY | UNIQUE_AREA
 
 /area/overmap_encounter/planetoid/beachplanet/explored
 	area_flags = VALID_TERRITORY
@@ -318,6 +403,21 @@
 	sound_environment = SOUND_ENVIRONMENT_MOUNTAINS
 	area_flags = HIDDEN_AREA | CAVES_ALLOWED | FLORA_ALLOWED | MOB_SPAWN_ALLOWED //allows jaunters to work
 	ambientsounds = REEBE
+
+/area/overmap_encounter/planetoid/desert
+	name = "\improper Desert Planetoid"
+	sound_environment = SOUND_ENVIRONMENT_MOUNTAINS
+	ambientsounds = DESERT
+
+/area/overmap_encounter/planetoid/shrouded
+	name = "\improper Shrouded Planetoid"
+	sound_environment = SOUND_ENVIRONMENT_MOUNTAINS
+	ambientsounds = DESERT
+
+/area/overmap_encounter/planetoid/moon
+	name = "\improper Planetoid Moon"
+	ambientsounds = SPACE
+	sound_environment = SOUND_AREA_SPACE
 
 /area/overmap_encounter/planetoid/asteroid
 	name = "\improper Asteroid Field"
