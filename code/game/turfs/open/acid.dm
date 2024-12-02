@@ -1,6 +1,7 @@
 /turf/open/water/acid
 	name = "acid lake"
 	desc = "A lake of acid."
+	icon = 'icons/turf/floors/ws_floors.dmi'
 	icon_state = "acid"
 	baseturfs = /turf/open/water/acid
 	slowdown = 2
@@ -145,4 +146,4 @@
 
 /turf/open/water/acid/whitesands
 	planetary_atmos = TRUE
-	initial_gas_mix = WHITESANDS_ATMOS
+	initial_gas_mix = SANDPLANET_DEFAULT_ATMOS

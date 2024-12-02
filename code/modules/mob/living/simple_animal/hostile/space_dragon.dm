@@ -44,7 +44,7 @@
 	mouse_opacity = MOUSE_OPACITY_ICON
 	butcher_results = list(/obj/item/stack/ore/diamond = 5, /obj/item/stack/sheet/sinew = 5, /obj/item/stack/sheet/bone = 30)
 	deathmessage = "screeches as its wings turn to dust and it collapses on the floor, life estinguished."
-	atmos_requirements = list("min_oxy" = 0, "max_oxy" = 0, "min_tox" = 0, "max_tox" = 0, "min_co2" = 0, "max_co2" = 0, "min_n2" = 0, "max_n2" = 0)
+	atmos_requirements = IMMUNE_ATMOS_REQS
 	minbodytemp = 0
 	maxbodytemp = 1500
 	faction = list("carp")
@@ -329,7 +329,7 @@
 			var/dir_to_target = get_dir(get_turf(src), get_turf(L))
 			var/throwtarget = get_edge_target_turf(target, dir_to_target)
 			L.safe_throw_at(throwtarget, 10, 1, src)
-			L.Paralyze(50)
+			L.Paralyze(1 SECONDS)
 	addtimer(CALLBACK(src, PROC_REF(reset_status)), 4 + ((tiredness * tiredness_mult) / 10))
 	tiredness = tiredness + (30 * tiredness_mult)
 

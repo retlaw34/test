@@ -39,7 +39,15 @@
 #define SPACE_LAYER 1.8
 //#define TURF_LAYER 2 //For easy recordkeeping; this is a byond define
 #define MID_TURF_LAYER 2.02
+
+#define WATER_TURF_LAYER 2.025 //water
+#define SAND_TURF_LAYER 2.026 //sand
+#define STONE_TURF_LAYER 2.027 //stone
+#define GRASS_TURF_LAYER 2.028 //grass
+#define SNOW_TURF_LAYER 2.029 //snow
+
 #define HIGH_TURF_LAYER 2.03
+
 #define TURF_PLATING_DECAL_LAYER 2.031
 #define TURF_DECAL_LAYER 2.039 //Makes turf decals appear in DM how they will look inworld.
 #define ABOVE_OPEN_TURF_LAYER 2.04
@@ -64,6 +72,8 @@
 #define HIGH_SIGIL_LAYER 2.56
 
 #define BELOW_OPEN_DOOR_LAYER 2.6
+///Anything below this layer is to be considered completely (visually) under water by the immerse layer.
+#define WATER_LEVEL_LAYER 2.61
 #define OPEN_DOOR_LAYER 2.7
 #define DOOR_HELPER_LAYER 2.71 //keep this above OPEN_DOOR_LAYER
 #define PROJECTILE_HIT_THRESHHOLD_LAYER 2.75 //projectiles won't hit objects at or below this layer if possible

@@ -35,13 +35,13 @@
 
 /datum/action/item_action/organ_action/colossus
 	name = "Voice of God"
-	var/obj/item/organ/vocal_cords/colossus/cords = null
-
-/datum/action/item_action/organ_action/colossus/New()
-	..()
-	cords = target
 
 /datum/action/item_action/organ_action/colossus/IsAvailable()
+	if(!istype(target, /obj/item/organ/vocal_cords/colossus))
+		return FALSE
+
+	var/obj/item/organ/vocal_cords/colossus/cords = target
+
 	if(world.time < cords.next_command)
 		return FALSE
 	if(!owner)
@@ -58,6 +58,7 @@
 /datum/action/item_action/organ_action/colossus/Trigger()
 	. = ..()
 	if(!IsAvailable())
+		var/obj/item/organ/vocal_cords/colossus/cords = target
 		if(world.time < cords.next_command)
 			to_chat(owner, "<span class='notice'>You must wait [DisplayTimeText(cords.next_command - world.time)] before Speaking again.</span>")
 		return
@@ -287,14 +288,14 @@
 		cooldown = COOLDOWN_DAMAGE
 		for(var/V in listeners)
 			var/mob/living/L = V
-			L.adjust_bodytemperature(50 * power_multiplier)
+			L.adjust_bodytemperature(5 * power_multiplier)
 
 	//COLD
 	else if((findtext(message, cold_words)))
 		cooldown = COOLDOWN_DAMAGE
 		for(var/V in listeners)
 			var/mob/living/L = V
-			L.adjust_bodytemperature(-50 * power_multiplier)
+			L.adjust_bodytemperature(-5 * power_multiplier)
 
 	//REPULSE
 	else if((findtext(message, repulse_words)))
